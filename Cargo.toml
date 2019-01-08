@@ -1,0 +1,7 @@
+[package]
+name = "fmsynth"
+version = "0.1.0"
+authors = ["connorwalsh <c@polygon.pizza>"]
+
+[dependencies]
+cpal = "0.8.2"
