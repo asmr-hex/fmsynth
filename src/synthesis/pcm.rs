@@ -1,6 +1,13 @@
 extern crate cpal;
 
-use self::cpal::{ EventLoop, Device, Format, StreamId };
+use self::cpal::{
+    EventLoop,
+    Device,
+    Format,
+    StreamId,
+    StreamData,
+    UnknownTypeOutputBuffer,
+};
 
 
 pub struct Generator {
@@ -9,6 +16,10 @@ pub struct Generator {
     format: Format,
     stream: StreamId,
 }
+
+// impl Debug for Generator {
+    
+// }
 
 impl Generator {
     pub fn new() -> Generator {
@@ -26,5 +37,28 @@ impl Generator {
             .unwrap();
 
         Generator {event_loop, device, format, stream: stream_id}
+    }
+
+    pub fn play(&self) {
+        self.event_loop.run(move |_stream_id, mut stream_data| {
+            match stream_data {
+                StreamData::Output { buffer: UnknownTypeOutputBuffer::U16(mut buffer) } => {
+                    for elem in buffer.iter_mut() {
+                        *elem = u16::max_value() / 2;
+                    }
+                },
+                StreamData::Output { buffer: UnknownTypeOutputBuffer::I16(mut buffer) } => {
+                    for elem in buffer.iter_mut() {
+                        *elem = 0;
+                    }
+                },
+                StreamData::Output { buffer: UnknownTypeOutputBuffer::F32(mut buffer) } => {
+                    for elem in buffer.iter_mut() {
+                        *elem = 0.0;
+                    }
+                },
+                _ => (),
+            }
+        })
     }
 }
