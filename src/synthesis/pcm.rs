@@ -36,6 +36,8 @@ impl Generator {
             .build_output_stream(&device, &format)
             .unwrap();
 
+        println!("{}", device.name());
+        
         Generator {event_loop, device, format, stream: stream_id}
     }
 
@@ -46,7 +48,7 @@ impl Generator {
         // Produce a sinusoid of maximum amplitude.
         let mut next_value = || {
             sample_clock = (sample_clock + 1.0) % sample_rate;
-            (sample_clock * 440.0 * 2.0 * 3.141592 / sample_rate).sin()
+            ((sample_clock * 440.0 * 2.0 * 3.141592 / sample_rate) + (sample_clock * 490.0 * 2.0 * 3.141592 / sample_rate).sin()).sin()
         };
         
 
