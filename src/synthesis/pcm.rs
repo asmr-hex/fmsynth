@@ -40,21 +40,40 @@ impl Generator {
     }
 
     pub fn play(&self) {
-        self.event_loop.run(move |_stream_id, mut stream_data| {
-            match stream_data {
-                StreamData::Output { buffer: UnknownTypeOutputBuffer::U16(mut buffer) } => {
-                    for elem in buffer.iter_mut() {
-                        *elem = u16::max_value() / 2;
+        let sample_rate = self.format.sample_rate.0 as f32;
+        let mut sample_clock = 0f32;
+
+        // Produce a sinusoid of maximum amplitude.
+        let mut next_value = || {
+            sample_clock = (sample_clock + 1.0) % sample_rate;
+            (sample_clock * 440.0 * 2.0 * 3.141592 / sample_rate).sin()
+        };
+        
+
+        self.event_loop.run(move |_, data| {
+            match data {
+                cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::U16(mut buffer) } => {
+                    for sample in buffer.chunks_mut(self.format.channels as usize) {
+                        let value = ((next_value() * 0.5 + 0.5) * std::u16::MAX as f32) as u16;
+                        for out in sample.iter_mut() {
+                            *out = value;
+                        }
                     }
                 },
-                StreamData::Output { buffer: UnknownTypeOutputBuffer::I16(mut buffer) } => {
-                    for elem in buffer.iter_mut() {
-                        *elem = 0;
+                cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::I16(mut buffer) } => {
+                    for sample in buffer.chunks_mut(self.format.channels as usize) {
+                        let value = (next_value() * std::i16::MAX as f32) as i16;
+                        for out in sample.iter_mut() {
+                            *out = value;
+                        }
                     }
                 },
-                StreamData::Output { buffer: UnknownTypeOutputBuffer::F32(mut buffer) } => {
-                    for elem in buffer.iter_mut() {
-                        *elem = 0.0;
+                cpal::StreamData::Output { buffer: cpal::UnknownTypeOutputBuffer::F32(mut buffer) } => {
+                    for sample in buffer.chunks_mut(self.format.channels as usize) {
+                        let value = next_value();
+                        for out in sample.iter_mut() {
+                            *out = value;
+                        }
                     }
                 },
                 _ => (),
